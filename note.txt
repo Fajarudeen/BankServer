@@ -1,0 +1,51 @@
+
+
+                    Server -NODE JS ,EXPRESS
+
+            1.create a folder and create package.json : npm init
+
+            2.create entry point file : index.js
+
+            3.install EXPRESS in the server : npm i express
+
+            4.import EXPRESS inside index.js file
+
+            5.create server app using EXPRESS
+
+            6.set up port for server app
+
+            7.to resolve client http request
+                - HTTP Response Status code
+                    1xx - Information
+                    2xx - Success
+                    3xx - Redirection
+                    4xx - Client Error
+                    5xx - Server Error
+
+            8.to connect mongodb with server
+                8.1 mangoose library- npm i mangoose
+
+            9. API Call - Asynchronous - to resolve use promise
+                    - resolve state - .then()
+                    - reject state - .catch()
+
+            10.cors ( Cross Origin Resource Sharing )
+                -Install cors : npm i cors
+                -import cors in index.js
+                -use cors inside the server app to define the origin
+
+            11.json web token - to authenticate request
+                -install jsonwebtoken : npm i jsonwebtoken
+                -import jsonwebtoken in dataService.js file
+                -to generate token when login Success : sign() 
+                -to send the token to client
+
+                -client will send token along with request after login
+                -verify token which is available in index.js
+                    -import jsonwebtoken in index.js
+                    -verify the token : verify() before resolving the client request
+
+            12.Middleware - special function (req,res,next) for authentication
+                          - it can affect request Response cycle
+                -Application specific Middleware
+                -Router specific Middleware
