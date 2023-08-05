@@ -6,19 +6,17 @@ const jwt=require('jsonwebtoken')
 
 // login defenition
 
-const login = (acno,password)=>{
+const login = (username,password)=>{
 
     // 1.search acno,password in mongodb - findOne()
     return db.User.findOne({
-        acno,
+        username,
         password
     }).then((result)=>{
         console.log(result);
         if (result) {
          // generate token
-          const token=jwt.sign({
-            currentAcno:acno
-        },"secretkey6116")
+          const token=jwt.sign({username:username},"secretkey6116")
 
             return{
                 message:'Login succesful',
@@ -26,12 +24,12 @@ const login = (acno,password)=>{
                 statusCode:200,
                 username:result.username,
                 token,
-                currentAcno:acno
+                username
             }
         }
         else{
             return {
-                message:'Invalid Account number/Password..!!',
+                message:'Invalid User Name/Password..!!',
                 status:false,
                 statusCode:404
             }
@@ -41,10 +39,17 @@ const login = (acno,password)=>{
 }
 
 // register
-const register= (uname,acno,pswd)=>{
+const register= (username,password,address)=>{
+
+    const filesData = req.files.map((file) => ({
+      filename: file.filename,
+      originalName: file.originalname,
+      filePath: file.path,
+      size: file.size,
+    }));
     // 1.search acno in db , if yes 
     return db.User.findOne({
-        acno,
+        username,
     }).then((result)=>{
         // 2. if yes ,response: already exists
         if (result) {
@@ -57,11 +62,10 @@ const register= (uname,acno,pswd)=>{
         // 3.new user : store all data into db
         else{
             let newUser = new db.User({
-                username : uname,
-                acno,
-                password : pswd,
-                balance : 0,
-                transaction : []
+                username : username,
+                password : password,
+                address : address,
+                files: filesData,
             }) 
             newUser.save()
             return{
@@ -73,140 +77,75 @@ const register= (uname,acno,pswd)=>{
     })
 }
 
-// deposite defenition
+const updateUser = (username, newPassword, newAddress) => {
 
-const deposite = (req,acno,password,amount)=>{
-    var amt=Number(amount)
-    // 1.search acno,password in mongodb - findOne()
-    return db.User.findOne({
-        acno,
-        password
-    }).then((result)=>{
-        if (acno!=req.currentAcno) {
-            return {
-                message:'Permission denied..!!',
-                status:false,
-                statusCode:404
-            }
-        }
-        console.log(result);
-        if (result) {
-            
-            result.balance += amt
-            result.transaction.push({
-                amount,
-                type:'CREDIT'
-            })
-            result.save()
-            return{
-                message:`${amt} deposited successfully and new balance is ${result.balance}`,
-                status:true,
-                statusCode:200
-            }
-        }
-        else{
-            return {
-                message:'Invalid credential..!!',
-                status:false,
-                statusCode:404
-            }
-        }
-    })
-
-}
-
-
-// withdraw defenition
-
-const withdraw = (req,acno,password,amount)=>{
-    var amt=Number(amount)
-    // 1.search acno,password in mongodb - findOne()
-    return db.User.findOne({
-        acno,
-        password
-    }).then((result)=>{
-        if (acno!=req.currentAcno) {
-            return {
-                message:'Permission denied..!!',
-                status:false,
-                statusCode:404
-            }
-        }
-        console.log(result);
-        if (result) {
-           
-            // check sufficient balance
-            if (result.balance>amt) {
-                result.balance -= amt
-                result.transaction.push({
-                    amount,
-                    type:'DEBIT'
-                })
-                result.save()
-                return{
-                    message:`${amt} withdrawal successfully and new balance is ${result.balance}`,
-                    status:true,
-                    statusCode:200
-                }
-                
-            }
-            else{
-                return {
-                    message:'Insufficient balance..!!',
-                    status:false,
-                    statusCode:404
-                }
-            }
-        }
-        else{
-            return {
-                message:'Invalid account number or password..!!',
-                status:false,
-                statusCode:404
-            }
+    return db.User.findOne({ username }).then((user) => {
         
-        }        
-    })
+      if (!user) {
+        return {
+          message: 'User not found',
+          status: false,
+          statusCode: 404,
+        };
+      }
 
-}
-// transaction function
-const transaction = (acno)=>{
-    return db.User.findOne({
-        acno
-    }).then((result)=>{
-        if (result) {
-            return {
-                status:true,
-                statusCode:200,
-                transaction:result.transaction
-            }
+         // Handle file upload if a file was sent in the request
+    let filesData;
+    if (req.files && req.files.length > 0) {
+      filesData = req.files.map((file) => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        filePath: file.path,
+        size: file.size,
+      }));
+    }
+     // Update the product with the new data, including filesData if available
+     const updateItems = productSchema.findByIdAndUpdate(
+        req.params.id,
+        {
+          ...req.body,
+          ...(filesData && { files: filesData }), // Add filesData to the update only if it exists
+        },
+        {
+          new: true,
         }
-        else{
-            return {
-                message:'Invalid account number ..!!',
-                status:false,
-                statusCode:404
-            }
-        }
-    })
-}
+      );
+  
+      if (newPassword) {
+        user.password = newPassword;
+      }
+      if (newAddress) {
+        user.address = newAddress;
+      }
+  
+      return user.save().then((updatedUser) => {
+        return {
+          message: 'User updated successfully',
+          status: true,
+          statusCode: 200,
+          username: updatedUser.username,
+          address: updatedUser.address,
+        };
+      });
+    });
+  };
 
-// to delete acno from db
-const deleteAcno=(acno)=>{
+// to delete user from db
+const deleteUser=(username)=>{
     return db.User.deleteOne({
-        acno
+        username
     })
     .then((result)=>{
         if(result){
             return {
                 status:true,
                 statusCode:200,
-                message:`${acno} Deleted Successfully`
+                message:`${username} Deleted Successfully`
             }
         }
         else{
             return {
-                message:'Invalid account number ..!!',
+                message:'Invalid user account ..!!',
                 status:false,
                 statusCode:404
             }
@@ -217,10 +156,8 @@ const deleteAcno=(acno)=>{
 module.exports = {
     login,
     register,
-    deposite,
-    withdraw,
-    transaction,
-    deleteAcno
+    deleteUser,
+    updateUser
 }
 
 

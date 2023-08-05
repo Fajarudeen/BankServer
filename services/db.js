@@ -3,21 +3,36 @@
 // 1.import mongoose
 const mongoose=require('mongoose')
 
-// 2.define connection strring
-mongoose.connect('mongodb://localhost:27017/bank',()=>{
+// 2.define connection string
+mongoose.connect('mongodb://localhost:27017/usermanagement',()=>{
     console.log('Mongodb connected successfully..');
 })
 
-// 3.createv a model to store data of bank
-const User = mongoose.model('User',{  
-    username : String,
-    acno : Number,
-    password : String,
-    balance : Number,
-    transaction : []
-})
-
-// 4. to use user in other files - we have to export it
-module.exports ={
-    User
-}
+const UserSchema = new mongoose.Schema({
+    username: String,
+    password: String,
+    address: String,
+    files: [
+        {
+          filename: {
+            type: String,
+            required: [true, "please add the filename"],
+          },
+          originalName: {
+            type: String,
+            required: [true, "please add the original filename"],
+          },
+          filePath: {
+            type: String,
+            required: [true, "please add the file path"],
+          },
+          size: {
+            type: Number,
+            required: [true, "please add the file size"],
+          },
+        },
+      ],
+  },
+  { timestamps: true }
+  );
+  module.exports = mongoose.model("User", UserSchema);

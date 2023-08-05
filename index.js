@@ -23,12 +23,12 @@ app.use(cors({
 
 // set up port for server app
 app.listen(3000,()=>{
-    console.log('server started at 3000');
+    console.log('server started at 3001');
 })
 
-// Appliocation specific middleware
+// Application specific middleware
 const appMiddleware=(req,res,next)=>{
-    console.log('Application specific middleware');
+    // console.log('Application specific middleware');
     next()
 }
 
@@ -36,7 +36,6 @@ const appMiddleware=(req,res,next)=>{
 app.use(appMiddleware)
 
 // to parse json
-
 app.use(express.json())
 
 // bank server api - request resolving
@@ -49,13 +48,13 @@ const jwtMiddleware=(req,res,next)=>{
     // 2.verify token using verify method in jsonwebtoken
     try{
         const data=jwt.verify(token,'secretkey6116')
-        req.currentAcno=data.currentAcno
+        req.username=data.username
         next()
     }
     catch{
         res.status(422).json({
             status:false,
-            message:'please log in'
+            message:'please login'
         })
     }
 }
@@ -65,7 +64,7 @@ const jwtMiddleware=(req,res,next)=>{
 app.post('/login',(req,res)=>{
     console.log(req.body);
     // Asynchronous
-    dataService.login(req.body.acno,req.body.pswd)
+    dataService.login(req.body.username,req.body.password)
     .then((result)=>{
         res.status(result.statusCode).json(result)
     })
@@ -76,48 +75,24 @@ app.post('/login',(req,res)=>{
 app.post('/register',(req,res)=>{
     console.log(req.body);
     // Asynchronous
-    dataService.register(req.body.acno,req.body.pswd,req.body.uname)
+    dataService.register(req.body.username,req.body.password,req.body.address)
     .then((result)=>{
         res.status(result.statusCode).json(result)
     })
 })
-
-// deposite api
-
-app.post('/deposite',jwtMiddleware,(req,res)=>{
+app.put('/update',(req,res)=>{
     console.log(req.body);
     // Asynchronous
-    dataService.deposite(req,req.body.acno,req.body.pswd,req.body.amount)
+    dataService.updateUser(req.body.username,req.body.password,req.body.address)
     .then((result)=>{
         res.status(result.statusCode).json(result)
     })
 })
 
-// withdrawal api
-
-app.post('/withdraw',jwtMiddleware,(req,res)=>{
-    console.log(req.body);
-    // Asynchronous
-    dataService.withdraw(req,req.body.acno,req.body.pswd,req.body.amount)
-    .then((result)=>{
-        res.status(result.statusCode).json(result)
-    })
-})
-
-// transaction api - roter specific middleware
-
-app.get('/transaction/:acno',jwtMiddleware,(req,res)=>{
-    console.log(req.params);
-    // Asynchronous
-    dataService.transaction(req.params.acno)
-    .then((result)=>{
-        res.status(result.statusCode).json(result)
-    })
-})
 
 // delete account API
-app.delete('/deleteAcno/:acno',jwtMiddleware,(req,res)=>{
-    dataService.deleteAcno(req.params.acno)
+app.delete('/delete/:username',(req,res)=>{
+    dataService.deleteUser(req.params.username)
     .then((result)=>{
         res.status(result.statusCode).json(result)
     })
