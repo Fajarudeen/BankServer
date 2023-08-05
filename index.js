@@ -21,7 +21,7 @@ app.use(cors({
 
 // set up port for server app
 app.listen(3000,()=>{
-    console.log('server started at 3001');
+    console.log('server started at 3000');
 })
 
 // Application specific middleware
